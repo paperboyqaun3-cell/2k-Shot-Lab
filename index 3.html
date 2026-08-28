@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d16">
+<title>2K Shot Lab</title>
+<style>
+:root{--bg:#080c14;--card:#111827;--line:#26344d;--text:#f5f7fb;--muted:#9aa8c0;--green:#35d98b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:900px;margin:auto;padding:22px 16px 50px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+h1{font-size:30px;margin:0}.badge{border:1px solid var(--line);border-radius:999px;padding:9px 13px;color:#b9c4d8;font-size:13px}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+nav button,.btn{border:1px solid var(--line);background:#121a2a;color:var(--muted);border-radius:16px;padding:15px;font-weight:700;font-size:16px}
+nav button.active{color:#fff;border-color:#3c5278}
+.card{background:linear-gradient(180deg,#111827,#0e1522);border:1px solid var(--line);border-radius:24px;padding:22px;margin:14px 0}
+h2{margin:0 0 8px;font-size:24px}p{color:var(--muted);line-height:1.5}
+.upload{border:2px dashed #3a4b69;border-radius:20px;padding:30px 16px;text-align:center;background:#0c1320}
+.upload input{display:none}.upload label{display:inline-block;background:var(--green);color:#07110b;border-radius:14px;padding:14px 20px;font-weight:800}
+.privacy{border:1px solid #234633;background:#0d1915;border-radius:15px;padding:13px;color:#b8d9c8}
+#videos{margin-top:16px}.videoCard{border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px;background:#0a101b}
+video{width:100%;max-height:520px;border-radius:12px;background:#000;display:block}
+.videoName{font-weight:700;margin:9px 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:13px;color:var(--muted)}.remove{margin-top:10px;width:100%}
+.actions{display:flex;gap:10px;margin-top:14px}.actions button{flex:1}
+.green{background:var(--green)!important;color:#06110b!important;border-color:transparent!important}
+.hidden{display:none!important}.empty{color:var(--muted);text-align:center;padding:18px}
+@media(min-width:650px){#videos{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.videoCard{margin:0}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>🎯 2K Shot Lab</h1><div class="badge">Private • No phone permissions</div></header>
+
+<nav>
+<button class="active" onclick="showTab('lab',this)">Shot Lab</button>
+<button onclick="showTab('setup',this)">My Setup</button>
+<button onclick="showTab('history',this)">History</button>
+</nav>
+
+<section id="lab" class="card">
+<h2>🎥 Video Upload</h2>
+<p>Upload your 2K gameplay or shooting video. You can select one or multiple videos and preview them right here.</p>
+
+<div class="privacy">🔒 <b>Privacy first</b><br>
+<span>Your videos stay in this browser. This page does not request contacts, location, microphone, camera, or other phone data.</span>
+</div>
+
+<div class="upload" style="margin-top:16px">
+<label for="videosInput">Choose video</label>
+<input id="videosInput" type="file" accept="video/*,.mp4,.mov,.webm" multiple>
+<p>MP4, MOV, WebM and other video formats supported by your browser.</p>
+</div>
+
+<div id="videos"><div class="empty">No videos uploaded yet.</div></div>
+
+<div class="actions">
+<button class="btn" onclick="clearAll()">Clear all</button>
+</div>
+</section>
+
+<section id="setup" class="card hidden">
+<h2>⚙️ My Setup</h2>
+<p>Save your build height, 3PT rating, shooting settings, release cue and jumper information here.</p>
+</section>
+
+<section id="history" class="card hidden">
+<h2>📊 History</h2>
+<p>Your analyzed shooting videos and practice results will appear here.</p>
+</section>
+
+<section class="card">
+<h2>⏱️ Timing Trainer</h2>
+<p>Practice your release timing with the green-window trainer.</p>
+<button class="btn green" style="width:100%" onclick="alert('Timing trainer ready.')">Start Trainer</button>
+</section>
+</main>
+
+<script>
+const input=document.getElementById('videosInput');
+const list=document.getElementById('videos');
+let videos=[];
+
+input.addEventListener('change',e=>{
+  [...e.target.files].filter(f=>f.type.startsWith('video/') || /\.(mp4|mov|webm)$/i.test(f.name))
+    .forEach(f=>videos.push({name:f.name,size:f.size,url:URL.createObjectURL(f)}));
+  render();
+  input.value='';
+});
+
+function render(){
+  list.innerHTML='';
+  if(!videos.length){
+    list.innerHTML='<div class="empty">No videos uploaded yet.</div>';
+    return;
+  }
+  videos.forEach((v,i)=>{
+    const card=document.createElement('div');
+    card.className='videoCard';
+    const player=document.createElement('video');
+    player.controls=true;
+    player.playsInline=true;
+    player.preload='metadata';
+    player.src=v.url;
+    const name=document.createElement('div');
+    name.className='videoName';
+    name.textContent=v.name;
+    const meta=document.createElement('div');
+    meta.className='meta';
+    meta.textContent=formatBytes(v.size);
+    const btn=document.createElement('button');
+    btn.className='btn remove';
+    btn.textContent='Remove video';
+    btn.onclick=()=>{
+      URL.revokeObjectURL(v.url);
+      videos.splice(i,1);
+      render();
+    };
+    card.append(player,name,meta,btn);
+    list.appendChild(card);
+  });
+}
+
+function clearAll(){
+  videos.forEach(v=>URL.revokeObjectURL(v.url));
+  videos=[];
+  render();
+}
+
+function formatBytes(bytes){
+  if(bytes<1024*1024) return Math.round(bytes/1024)+' KB';
+  return (bytes/(1024*1024)).toFixed(1)+' MB';
+}
+
+function showTab(id,button){
+  document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  button.classList.add('active');
+}
+</script>
+</body>
+</html>
