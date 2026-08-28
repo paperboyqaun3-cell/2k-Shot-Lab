@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f19">
+<title>2K Shot Lab</title>
+<style>
+:root{--bg:#080b12;--card:#111725;--card2:#171d2d;--text:#f7f8fb;--muted:#9ca6ba;--accent:#39d98a;--blue:#4d8dff;--line:#252d40}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#080b12,#0d1220);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:auto;padding:20px 16px 50px}.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand h1{font-size:25px;margin:0}.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:7px 10px;border-radius:99px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.tab{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:12px;border-radius:12px;font-weight:700}.tab.active{color:#fff;background:var(--card2);border-color:#3a4761}
+.card{background:rgba(17,23,37,.94);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 12px 35px rgba(0,0,0,.2)}
+h2{font-size:18px;margin:0 0 6px}p{color:var(--muted);margin:6px 0 14px;line-height:1.45}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}input,select{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);background:#0b101b;color:#fff;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{width:100%;border:0;border-radius:12px;padding:13px;font-weight:800;font-size:15px;background:var(--blue);color:white;margin-top:12px}.btn.secondary{background:#20283a}.btn.green{background:var(--accent);color:#07130d}
+.lab{position:relative;text-align:center;overflow:hidden}.meter{height:24px;background:#222a3a;border-radius:99px;position:relative;margin:25px 0 12px;border:1px solid #303a50}.greenzone{position:absolute;left:35%;width:30%;height:100%;background:rgba(57,217,138,.9);border-radius:99px}.needle{position:absolute;top:-8px;width:4px;height:40px;background:#fff;border-radius:4px;left:0%;box-shadow:0 0 10px rgba(255,255,255,.7)}.status{font-size:28px;font-weight:900;min-height:38px}.sub{font-size:13px;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}.stat{background:#0c111c;border:1px solid var(--line);border-radius:12px;padding:12px}.stat b{display:block;font-size:20px}.stat span{color:var(--muted);font-size:11px}.history{max-height:240px;overflow:auto}.row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12px}.good{color:var(--accent)}.bad{color:#ff6b7a}.hidden{display:none}.small{font-size:12px}.notice{padding:10px 12px;border-radius:10px;background:#0c111c;border:1px solid var(--line);color:var(--muted);font-size:12px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.wrap{padding-top:14px}.brand h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><h1>🎯 2K Shot Lab</h1><div class="pill">Private • No phone permissions</div></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('lab',this)">Shot Lab</button>
+    <button class="tab" onclick="showTab('settings',this)">My Setup</button>
+    <button class="tab" onclick="showTab('history',this)">History</button>
+  </div>
+
+  <section id="lab">
+    <div class="card lab">
+      <h2>Timing Trainer</h2>
+      <p>Practice your release timing. The green window can be adjusted to match your jumper.</p>
+      <div class="meter" id="meter"><div class="greenzone" id="zone"></div><div class="needle" id="needle"></div></div>
+      <div class="status" id="status">Ready</div>
+      <div class="sub" id="hint">Tap SHOOT when the marker reaches your green window.</div>
+      <button class="btn green" id="shoot">SHOOT</button>
+      <div class="stats">
+        <div class="stat"><b id="makes">0</b><span>Greens</span></div>
+        <div class="stat"><b id="shots">0</b><span>Shots</span></div>
+        <div class="stat"><b id="pct">0%</b><span>Green %</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Controller</h2>
+      <p>On a supported browser/device, connect your controller before starting. This version also works with the on-screen SHOOT button.</p>
+      <div class="notice" id="controller">Controller: checking…</div>
+      <button class="btn secondary" onclick="checkController()">Check Controller</button>
+    </div>
+  </section>
+
+  <section id="settings" class="hidden">
+    <div class="card">
+      <h2>Shot Setup</h2>
+      <div class="grid">
+        <div><label>3PT Rating</label><input id="three" type="number" min="0" max="99" value="85"></div>
+        <div><label>Height</label><input id="height" type="text" value="6'8"></div>
+      </div>
+      <label>Release Cue</label>
+      <select id="cue"><option>Push</option><option>Set Point</option><option>Release</option><option>Jump</option></select>
+      <label>Green Window</label>
+      <input id="window" type="range" min="10" max="50" value="30" oninput="updateWindow(this.value)">
+      <p class="small">Current window: <b id="windowVal">30%</b></p>
+      <button class="btn" onclick="saveSetup()">Save Setup</button>
+      <div class="notice" id="saved">Setup is stored only in this browser.</div>
+    </div>
+  </section>
+
+  <section id="history" class="hidden">
+    <div class="card">
+      <h2>Shot History</h2><p>Your results stay on this device unless you choose to export them later.</p>
+      <div class="history" id="log"></div>
+      <button class="btn secondary" onclick="clearHistory()">Clear History</button>
+    </div>
+  </section>
+</div>
+
+<script>
+let running=false, start=0, raf=0, shots=0, greens=0, speed=1150;
+const $=id=>document.getElementById(id);
+function showTab(id,el){['lab','settings','history'].forEach(x=>$(x).classList.toggle('hidden',x!==id));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active')}
+function updateWindow(v){$('windowVal').textContent=v+'%'; const w=+v; const left=(100-w)/2; $('zone').style.left=left+'%'; $('zone').style.width=w+'%'}
+function animate(t){
+ if(!running)return;
+ let p=((t-start)%speed)/speed;
+ $('needle').style.left=(p*100)+'%';
+ raf=requestAnimationFrame(animate);
+}
+function newShot(){
+ running=true; start=performance.now(); $('status').textContent='Ready'; $('status').className='status'; cancelAnimationFrame(raf); raf=requestAnimationFrame(animate);
+}
+function shoot(){
+ if(!running){newShot();return}
+ const left=parseFloat($('zone').style.left||'35'), width=parseFloat($('zone').style.width||'30'), pos=parseFloat($('needle').style.left||'0');
+ shots++; let good=pos>=left && pos<=left+width;
+ if(good)greens++;
+ $('status').textContent=good?'GREEN! 🟢':'MISS 🔴';
+ $('status').className='status '+(good?'good':'bad');
+ $('hint').textContent=good?'Perfect timing.':'Adjust your release timing.';
+ $('shots').textContent=shots;$('makes').textContent=greens;$('pct').textContent=Math.round(greens/shots*100)+'%';
+ addLog(good,pos);
+ running=false; cancelAnimationFrame(raf); setTimeout(()=>{if(!running)$('status').textContent='Ready'},700);
+}
+function addLog(good,pos){
+ let data=JSON.parse(localStorage.getItem('shotlog')||'[]'); data.unshift({good,time:new Date().toLocaleTimeString(),pos:Math.round(pos)});
+ data=data.slice(0,100);localStorage.setItem('shotlog',JSON.stringify(data));renderLog();
+}
+function renderLog(){
+ let data=JSON.parse(localStorage.getItem('shotlog')||'[]'); $('log').innerHTML=data.length?data.map(x=>`<div class="row"><span>${x.time}</span><span class="${x.good?'good':'bad'}">${x.good?'GREEN':'MISS'}</span><span>${x.pos}%</span><span>${x.good?'Perfect':'Adjust'}</span></div>`).join(''):'<p>No shots yet.</p>';
+}
+function clearHistory(){localStorage.removeItem('shotlog');renderLog()}
+function saveSetup(){localStorage.setItem('setup',JSON.stringify({three:$('three').value,height:$('height').value,cue:$('cue').value,window:$('window').value}));$('saved').textContent='Saved ✓ This setup stays in this browser.';updateWindow($('window').value)}
+function loadSetup(){let s=JSON.parse(localStorage.getItem('setup')||'null');if(s){$('three').value=s.three;$('height').value=s.height;$('cue').value=s.cue;$('window').value=s.window;updateWindow(s.window)}}
+function checkController(){
+ if(!navigator.getGamepads){$('controller').textContent='Controller API is not available in this browser.';return}
+ let pads=[...navigator.getGamepads()].filter(Boolean);
+ $('controller').textContent=pads.length?'Controller connected: '+(pads[0].id||'Gamepad'):'No controller detected. Connect one and tap Check Controller.';
+}
+$('shoot').addEventListener('click',shoot);
+window.addEventListener('gamepadconnected',e=>{$('controller').textContent='Controller connected: '+e.gamepad.id});
+window.addEventListener('gamepaddisconnected',()=>{$('controller').textContent='Controller disconnected.'});
+loadSetup();updateWindow($('window').value);renderLog();checkController();
+</script>
+</body>
+</html>
